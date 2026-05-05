@@ -10,12 +10,19 @@ public class SteamLobbyManager : MonoBehaviour
     public static SteamLobbyManager Instance;
 
     public Lobby? CurrentLobby;
+    public bool IsInitialized { get; private set; }
 
     // Events (giống Unity Lobby pattern)
+    public Action OnSteamInitDone;
     public Action<Lobby> OnLobbyCreated;
     public Action<Lobby> OnLobbyJoined;
+    public Action<Lobby> OnLobbyUpdated;
     public Action OnLobbyLeft;
     public Action<List<Lobby>> OnLobbyListUpdated;
+
+    public Action OnLobbyTaskStarted;
+    public Action OnLobbyTaskCompleted;
+    public Action OnLobbyError;
 
     private void Awake()
     {
@@ -23,9 +30,12 @@ public class SteamLobbyManager : MonoBehaviour
         {
             SteamClient.Init(480);
             Debug.Log("Steam OK: " + SteamClient.Name);
+            IsInitialized = true;
+            OnSteamInitDone?.Invoke();
         }
         catch (System.Exception e)
         {
+            IsInitialized = false;
             Debug.LogError("Steam fail: " + e.Message);
         }
 
@@ -38,6 +48,7 @@ public class SteamLobbyManager : MonoBehaviour
         SteamMatchmaking.OnLobbyEntered += HandleLobbyEntered;
         SteamMatchmaking.OnLobbyMemberJoined += HandleMemberJoined;
         SteamMatchmaking.OnLobbyMemberLeave += HandleMemberLeft;
+        SteamMatchmaking.OnLobbyDataChanged += HandleLobbyDataChanged;
 
         _ = ListLobbies();
     }
@@ -54,9 +65,22 @@ public class SteamLobbyManager : MonoBehaviour
         SteamMatchmaking.OnLobbyMemberLeave -= HandleMemberLeft;
     }
 
+    private void HandleLobbyDataChanged(Lobby lobby)
+    {
+        Debug.Log("Lobby data changed: " + lobby.Id);
+
+        if (!CurrentLobby.HasValue || lobby.Id != CurrentLobby.Value.Id) return;
+
+        CurrentLobby = lobby;
+
+        OnLobbyUpdated?.Invoke(CurrentLobby.Value);
+    }
+
     // ================= CREATE =================
     public async Task CreateLobby(int maxMembers = 4)
     {
+        OnLobbyTaskStarted?.Invoke();
+
         var lobby = await SteamMatchmaking.CreateLobbyAsync(maxMembers);
 
         if (!lobby.HasValue)
@@ -68,6 +92,7 @@ public class SteamLobbyManager : MonoBehaviour
         CurrentLobby = lobby;
 
         lobby.Value.SetPublic();
+        lobby.Value.SetData("name", SteamClient.Name + "'s Room");
 
         // QUAN TRỌNG: lưu host
         lobby.Value.SetData("HostAddress", SteamClient.SteamId.ToString());
@@ -75,11 +100,15 @@ public class SteamLobbyManager : MonoBehaviour
         Debug.Log("Lobby created: " + lobby.Value.Id);
 
         OnLobbyCreated?.Invoke(lobby.Value);
+
+        OnLobbyTaskCompleted?.Invoke();
     }
 
     // ================= LIST =================
     public async Task ListLobbies()
     {
+        OnLobbyTaskStarted?.Invoke();
+
         Debug.Log("Requesting lobby list...");
 
         var lobbies = await SteamMatchmaking.LobbyList
@@ -91,12 +120,18 @@ public class SteamLobbyManager : MonoBehaviour
         Debug.Log("Found " + list.Count + " lobbies");
 
         OnLobbyListUpdated?.Invoke(list);
+
+        OnLobbyTaskCompleted?.Invoke();
     }
 
     // ================= JOIN =================
     public async Task JoinLobby(ulong lobbyId)
     {
+        OnLobbyTaskStarted?.Invoke();
+
         await SteamMatchmaking.JoinLobbyAsync(lobbyId);
+
+        OnLobbyTaskCompleted?.Invoke();
     }
 
     private void HandleLobbyEntered(Lobby lobby)
@@ -111,6 +146,8 @@ public class SteamLobbyManager : MonoBehaviour
     // ================= LEAVE =================
     public void LeaveLobby()
     {
+        OnLobbyTaskStarted?.Invoke();
+
         if (CurrentLobby.HasValue)
         {
             CurrentLobby.Value.Leave();
@@ -120,17 +157,31 @@ public class SteamLobbyManager : MonoBehaviour
 
             OnLobbyLeft?.Invoke();
         }
+
+        OnLobbyTaskCompleted?.Invoke();
     }
 
     // ================= MEMBER EVENTS =================
     private void HandleMemberJoined(Lobby lobby, Friend friend)
     {
-        Debug.Log($"Player joined: {friend.Name}");
+        Debug.Log($"Member joined: {friend.Name} ({friend.Id})");
+
+        if (!CurrentLobby.HasValue || lobby.Id != CurrentLobby.Value.Id) return;
+
+        CurrentLobby = lobby;
+
+        OnLobbyUpdated?.Invoke(CurrentLobby.Value);
     }
 
     private void HandleMemberLeft(Lobby lobby, Friend friend)
     {
-        Debug.Log($"Player left: {friend.Name}");
+        Debug.Log($"Member left: {friend.Name} ({friend.Id})");
+
+        if (!CurrentLobby.HasValue || lobby.Id != CurrentLobby.Value.Id) return;
+
+        CurrentLobby = lobby;
+
+        OnLobbyUpdated?.Invoke(CurrentLobby.Value);
     }
 
     // ================= GET HOST =================
@@ -141,5 +192,11 @@ public class SteamLobbyManager : MonoBehaviour
         string hostId = CurrentLobby.Value.GetData("HostAddress");
 
         return ulong.Parse(hostId);
+    }
+
+
+    public string GetPlayerName()
+    {
+        return SteamClient.Name;
     }
 }

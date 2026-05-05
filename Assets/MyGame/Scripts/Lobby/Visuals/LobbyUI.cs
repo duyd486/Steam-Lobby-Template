@@ -1,7 +1,8 @@
+﻿using Steamworks;
+using Steamworks.Data;
 using System.Collections.Generic;
 using TMPro;
 using Unity.Netcode;
-using Unity.Services.Lobbies.Models;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,8 +18,6 @@ public class LobbyUI : MonoBehaviour
     [SerializeField] private GameObject playerInfoSingleUI;
     [SerializeField] private GameObject playerContainer;
 
-    private Lobby lobby;
-
     private void Awake()
     {
         Instance = this;
@@ -31,81 +30,75 @@ public class LobbyUI : MonoBehaviour
 
         leaveLobbyBtn.onClick.AddListener(() =>
         {
-            LobbyManager.Instance.LeaveLobby();
+            SteamLobbyManager.Instance.LeaveLobby();
         });
 
         startGameBtn.onClick.AddListener(() =>
         {
-            LobbyManager.Instance.LockLobby();
-            //SceneLoader.LoadSceneByNetwork(SceneLoader.Scene.Game);
+            // Start game bằng NGO
+            if (NetworkManager.Singleton.IsHost)
+            {
+                NetworkManager.Singleton.StartHost();
+            }
         });
 
-        LobbyManager.Instance.OnLobbyDataChanged += LobbyManager_OnLobbyDataChanged;
-        LobbyManager.Instance.OnLobbyCreated += LobbyManager_OnLobbyCreated;
+        SteamLobbyManager.Instance.OnLobbyJoined += OnLobbyUpdated;
+        SteamLobbyManager.Instance.OnLobbyCreated += OnLobbyUpdated;
+        SteamLobbyManager.Instance.OnLobbyLeft += Hide;
     }
 
-    private void LobbyManager_OnLobbyCreated(object sender, LobbyManager.OnLobbyCreatedEventArgs e)
+    private void OnLobbyUpdated(Lobby lobby)
     {
-        UpdateLobby(e.hostLobby);
-    }
-
-    private void LobbyManager_OnLobbyDataChanged(object sender, LobbyManager.OnLobbyDataChangedEventArgs e)
-    {
-        UpdateLobby(e.lobby);
+        UpdateLobby(lobby);
     }
 
     public void UpdateLobby(Lobby lobby)
     {
-        if (lobby == null)
+        if (!lobby.Id.IsValid)
         {
             Hide();
             return;
         }
 
-        if (playerInfos.Count < lobby.MaxPlayers)
+        foreach (Transform child in playerContainer.transform)
         {
-            for (int i = playerInfos.Count; i < lobby.MaxPlayers; i++)
-            {
-                PlayerInfoSingleUI playerInfo = Instantiate(playerInfoSingleUI, playerContainer.transform).GetComponent<PlayerInfoSingleUI>();
-                playerInfos.Add(playerInfo);
-                playerInfo.Show();
-            }
+            if (child == playerInfoSingleUI.transform) continue; // giữ lại template
+            Destroy(child.gameObject);
         }
 
-        this.lobby = lobby;
-        lobbyName.text = lobby.Name;
+        playerInfos.Clear();
 
-        int playerIndex = 0;
-        List<Player> players = lobby.Players;
+        // ====== LOBBY NAME ======
+        string name = lobby.GetData("name");
+        lobbyName.text = string.IsNullOrEmpty(name) ? "Lobby" : name;
 
-        foreach (PlayerInfoSingleUI playerInfo in playerInfos)
+        // ====== PLAYER LIST ======
+        var members = lobby.Members;
+
+        foreach (var member in members)
         {
-            if (playerIndex < players.Count)
-            {
-                playerInfo.UpdatePlayerInfo(players[playerIndex].Data["PlayerName"].Value);
-                playerIndex++;
-            }
-            else
-            {
-                playerInfo.UpdatePlayerInfo();
-            }
+            GameObject obj = Instantiate(playerInfoSingleUI, playerContainer.transform);
+            obj.SetActive(true);
+
+            PlayerInfoSingleUI ui = obj.GetComponent<PlayerInfoSingleUI>();
+            ui.UpdatePlayerInfo(member.Name);
+
+            playerInfos.Add(ui);
         }
 
-        Show();
+        Show(lobby);
     }
 
-    public void Show()
+    public void Show(Lobby lobby)
     {
         gameObject.SetActive(true);
-        if (NetworkManager.Singleton.IsHost)
-        {
-            startGameBtn.gameObject.SetActive(true);
-        }
-        else
-        {
-            startGameBtn.gameObject.SetActive(false);
-        }
+
+        // chỉ host mới được start
+        bool isHost = lobby.Owner.Id == SteamClient.SteamId;
+
+        startGameBtn.gameObject.SetActive(isHost);
     }
+
     public void Hide()
     {
         gameObject.SetActive(false);

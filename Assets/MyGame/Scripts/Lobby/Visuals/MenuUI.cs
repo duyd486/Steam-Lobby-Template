@@ -2,63 +2,44 @@ using System;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using WebSocketSharp;
 
 public class MenuUI : MonoBehaviour
 {
+    [SerializeField] private TextMeshProUGUI playerNameTxt;
     [SerializeField] private Button createLobbyBtn;
     [SerializeField] private Button listLobbyBtn;
 
-
-    [SerializeField] private GameObject createLobbyModal;
-    [SerializeField] private Button cancelBtn;
-    [SerializeField] private Button createBtn;
-    [SerializeField] private TMP_InputField nameLobbyInput;
-
-    [SerializeField] private TMP_InputField playerNameInput;
-
-
     public event EventHandler OnListLobbyClick;
-
-    private void Awake()
-    {
-        createLobbyModal.SetActive(false);
-    }
 
     private void Start()
     {
-        playerNameInput.onValueChanged.AddListener((name) =>
-        {
-            LobbyManager.Instance.SetPlayerName(playerNameInput.text);
-        });
-
-        createLobbyBtn.onClick.AddListener(() => { createLobbyModal.SetActive(true); });
-
-        cancelBtn.onClick.AddListener(() => { createLobbyModal.SetActive(false); });
-
-        createBtn.onClick.AddListener(CreateLobby);
-
-
+        createLobbyBtn.onClick.AddListener(CreateLobby);
 
         listLobbyBtn.onClick.AddListener(async () =>
         {
-            await LobbyManager.Instance.ListLobbies();
+            await SteamLobbyManager.Instance.ListLobbies();
             OnListLobbyClick?.Invoke(this, EventArgs.Empty);
         });
 
-        playerNameInput.text = LobbyManager.Instance.GetPlayer().Data["PlayerName"].Value;
-        if (playerNameInput.text.IsNullOrEmpty())
+
+        if (SteamLobbyManager.Instance.IsInitialized)
         {
-            playerNameInput.text = LobbyManager.Instance.GetPlayerName();
-            LobbyManager.Instance.SetPlayerName(playerNameInput.text);
+            SetPlayerName();
+        }
+        else
+        {
+            SteamLobbyManager.Instance.OnSteamInitDone += SetPlayerName;
         }
     }
 
     private async void CreateLobby()
     {
-        if (nameLobbyInput.text.IsNullOrEmpty()) return;
-        //LobbyManager.Instance.CreateLobby(nameLobbyInput.text, 4);
-        await LobbyManager.Instance.CreateLobbyWithRelay(nameLobbyInput.text, 4);
-        createLobbyModal.SetActive(false);
+        await SteamLobbyManager.Instance.CreateLobby(4);
+    }
+
+    private void SetPlayerName()
+    {
+        Debug.Log("Player: " + SteamLobbyManager.Instance.GetPlayerName());
+        playerNameTxt.text = "Player: " + SteamLobbyManager.Instance.GetPlayerName();
     }
 }

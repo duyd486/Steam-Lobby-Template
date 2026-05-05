@@ -1,5 +1,5 @@
+﻿using Steamworks.Data;
 using TMPro;
-using Unity.Services.Lobbies.Models;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,8 +8,8 @@ public class LobbySingleUI : MonoBehaviour
     [SerializeField] private TextMeshProUGUI nameText;
     [SerializeField] private TextMeshProUGUI gameModeText;
     [SerializeField] private TextMeshProUGUI playerCountText;
-    private Button joinBtn;
 
+    private Button joinBtn;
     private Lobby lobby;
 
     private void Awake()
@@ -19,16 +19,31 @@ public class LobbySingleUI : MonoBehaviour
 
     private void Start()
     {
-        joinBtn.onClick.AddListener(() =>
+        // ===== JOIN BUTTON =====
+        joinBtn.onClick.RemoveAllListeners();
+        joinBtn.onClick.AddListener(async () =>
         {
-            LobbyManager.Instance.JoinLobbyById(lobby.Id);
+            await SteamLobbyManager.Instance.JoinLobby(lobby.Id);
         });
     }
 
     public void UpdateLobby(Lobby lobby)
     {
         this.lobby = lobby;
-        nameText.text = lobby.Name;
-        playerCountText.text = (lobby.MaxPlayers - lobby.AvailableSlots).ToString() + "/" + lobby.MaxPlayers;
+
+        // ===== NAME =====
+        string name = lobby.GetData("name");
+        if (string.IsNullOrEmpty(name))
+        {
+            name = "Lobby";
+        }
+        nameText.text = name;
+
+        // ===== MODE (nếu bạn có set) =====
+        string mode = lobby.GetData("mode");
+        gameModeText.text = string.IsNullOrEmpty(mode) ? "Default" : mode;
+
+        // ===== PLAYER COUNT =====
+        playerCountText.text = $"{lobby.MemberCount}/{lobby.MaxMembers}";
     }
 }

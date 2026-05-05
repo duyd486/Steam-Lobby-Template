@@ -1,5 +1,5 @@
+﻿using Steamworks.Data;
 using System.Collections.Generic;
-using Unity.Services.Lobbies.Models;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -11,50 +11,53 @@ public class ListLobbyUI : MonoBehaviour
     [SerializeField] private GameObject lobbySingleUI;
     [SerializeField] private MenuUI menuUI;
 
-
-
     private void Start()
     {
         menuUI.OnListLobbyClick += MenuUI_OnListLobbyClick;
-        LobbyManager.Instance.OnListLobbiesChanged += LobbyManager_OnListLobbiesChanged;
+
+        SteamLobbyManager.Instance.OnLobbyListUpdated += OnLobbyListUpdated;
 
         Hide();
+
         backBtn.onClick.AddListener(() =>
         {
             Hide();
         });
+
         reloadBtn.onClick.AddListener(async () =>
         {
-            Debug.Log("Reload");
-            await LobbyManager.Instance.ListLobbies();
+            Debug.Log("Reload Steam Lobby");
+            await SteamLobbyManager.Instance.ListLobbies();
         });
     }
 
-    private void LobbyManager_OnListLobbiesChanged(object sender, LobbyManager.OnListLobbiesChangedEventArgs e)
+    private void OnLobbyListUpdated(List<Lobby> lobbies)
     {
-        UpdateListLobby();
+        UpdateListLobby(lobbies);
     }
 
     private void MenuUI_OnListLobbyClick(object sender, System.EventArgs e)
     {
         Show();
-        UpdateListLobby();
+        _ = SteamLobbyManager.Instance.ListLobbies();
     }
 
-    public void UpdateListLobby()
+    public void UpdateListLobby(List<Lobby> lobbies)
     {
-        List<Lobby> lobbies = LobbyManager.Instance.GetCurrentLobbies();
-
-        foreach (Transform chil in container.transform)
+        foreach (Transform child in container.transform)
         {
-            chil.gameObject.SetActive(false);
+            // bỏ qua template
+            if (child == lobbySingleUI.transform) continue;
+
+            Destroy(child.gameObject);
         }
 
-        for (int i = 0; i < lobbies.Count; i++)
+        foreach (var lobby in lobbies)
         {
-            GameObject lobbyInfoOb = Instantiate(lobbySingleUI, container.transform);
-            lobbyInfoOb.SetActive(true);
-            lobbyInfoOb.GetComponent<LobbySingleUI>().UpdateLobby(lobbies[i]);
+            GameObject obj = Instantiate(lobbySingleUI, container.transform);
+            obj.SetActive(true);
+
+            obj.GetComponent<LobbySingleUI>().UpdateLobby(lobby);
         }
     }
 
@@ -62,6 +65,7 @@ public class ListLobbyUI : MonoBehaviour
     {
         gameObject.SetActive(true);
     }
+
     private void Hide()
     {
         gameObject.SetActive(false);
