@@ -4,10 +4,15 @@ using UnityEngine.UI;
 
 public class PlayerInfoSingleUI : MonoBehaviour
 {
-    [SerializeField] private Image playerAvatar;
     [SerializeField] private TextMeshProUGUI playerNameTxt;
+    private Image playerAvatar;
 
     private ulong currentSteamId;
+
+    private void Awake()
+    {
+        playerAvatar = GetComponentInChildren<Image>();
+    }
 
     public void UpdatePlayerInfo(string playerName)
     {
@@ -25,7 +30,7 @@ public class PlayerInfoSingleUI : MonoBehaviour
 
         playerNameTxt.text = data.Name;
 
-        if (data.Avatar != null)
+        if (data.Avatar != null && playerAvatar != null)
         {
             playerAvatar.sprite = data.Avatar;
         }
