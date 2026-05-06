@@ -6,14 +6,11 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/MyGame/Scenes/MyLobby.unity
-    guid: 99c9720ab356a0642a771bea13969a05
-  - enabled: 1
-    path: Assets/MyGame/Scenes/UnityLobby.unity
-    guid: 23e1eb41616072c43bf0f426995e84d3
-  - enabled: 1
     path: Assets/MyGame/Scenes/SteamLobby.unity
     guid: a4bb85b1b93f3ec49bfff3e937e80708
+  - enabled: 1
+    path: Assets/MyGame/Scenes/Game.unity
+    guid: 7c9bfd34b5c26754484ba67fffcf121a
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

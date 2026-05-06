@@ -44,6 +44,7 @@ public class LobbyUI : MonoBehaviour
 
         SteamLobbyManager.Instance.OnLobbyJoined += OnLobbyUpdated;
         SteamLobbyManager.Instance.OnLobbyCreated += OnLobbyUpdated;
+        SteamLobbyManager.Instance.OnLobbyUpdated += OnLobbyUpdated;
         SteamLobbyManager.Instance.OnLobbyLeft += Hide;
     }
 
@@ -53,6 +54,7 @@ public class LobbyUI : MonoBehaviour
         startGameBtn.onClick.RemoveAllListeners();
         SteamLobbyManager.Instance.OnLobbyJoined -= OnLobbyUpdated;
         SteamLobbyManager.Instance.OnLobbyCreated -= OnLobbyUpdated;
+        SteamLobbyManager.Instance.OnLobbyUpdated -= OnLobbyUpdated;
         SteamLobbyManager.Instance.OnLobbyLeft -= Hide;
     }
 
