@@ -31,6 +31,14 @@ public class ListLobbyUI : MonoBehaviour
         });
     }
 
+    private void OnDestroy()
+    {
+        menuUI.OnListLobbyClick -= MenuUI_OnListLobbyClick;
+        backBtn.onClick.RemoveAllListeners();
+        reloadBtn.onClick.RemoveAllListeners();
+        SteamLobbyManager.Instance.OnLobbyListUpdated -= OnLobbyListUpdated;
+    }
+
     private void OnLobbyListUpdated(List<Lobby> lobbies)
     {
         UpdateListLobby(lobbies);

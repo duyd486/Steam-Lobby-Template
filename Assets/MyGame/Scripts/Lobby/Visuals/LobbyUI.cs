@@ -47,6 +47,15 @@ public class LobbyUI : MonoBehaviour
         SteamLobbyManager.Instance.OnLobbyLeft += Hide;
     }
 
+    private void OnDestroy()
+    {
+        leaveLobbyBtn.onClick.RemoveAllListeners();
+        startGameBtn.onClick.RemoveAllListeners();
+        SteamLobbyManager.Instance.OnLobbyJoined -= OnLobbyUpdated;
+        SteamLobbyManager.Instance.OnLobbyCreated -= OnLobbyUpdated;
+        SteamLobbyManager.Instance.OnLobbyLeft -= Hide;
+    }
+
     private void OnLobbyUpdated(Lobby lobby)
     {
         UpdateLobby(lobby);
@@ -81,7 +90,7 @@ public class LobbyUI : MonoBehaviour
             obj.SetActive(true);
 
             PlayerInfoSingleUI ui = obj.GetComponent<PlayerInfoSingleUI>();
-            ui.UpdatePlayerInfo(member.Name);
+            ui.UpdatePlayerInfo(member.Id);
 
             playerInfos.Add(ui);
         }

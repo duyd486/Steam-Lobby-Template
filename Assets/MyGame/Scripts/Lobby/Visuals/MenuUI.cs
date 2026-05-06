@@ -32,6 +32,16 @@ public class MenuUI : MonoBehaviour
         }
     }
 
+    private void OnDestroy()
+    {
+        createLobbyBtn.onClick.RemoveAllListeners();
+        listLobbyBtn.onClick.RemoveAllListeners();
+        if (SteamLobbyManager.Instance.IsInitialized)
+        {
+            SteamLobbyManager.Instance.OnSteamInitDone -= SetPlayerName;
+        }
+    }
+
     private async void CreateLobby()
     {
         await SteamLobbyManager.Instance.CreateLobby(4);

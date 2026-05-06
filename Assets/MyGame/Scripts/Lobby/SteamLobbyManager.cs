@@ -12,7 +12,7 @@ public class SteamLobbyManager : MonoBehaviour
     public Lobby? CurrentLobby;
     public bool IsInitialized { get; private set; }
 
-    // Events (giống Unity Lobby pattern)
+    // Events
     public Action OnSteamInitDone;
     public Action<Lobby> OnLobbyCreated;
     public Action<Lobby> OnLobbyJoined;
@@ -49,8 +49,6 @@ public class SteamLobbyManager : MonoBehaviour
         SteamMatchmaking.OnLobbyMemberJoined += HandleMemberJoined;
         SteamMatchmaking.OnLobbyMemberLeave += HandleMemberLeft;
         SteamMatchmaking.OnLobbyDataChanged += HandleLobbyDataChanged;
-
-        _ = ListLobbies();
     }
 
     private void Update()
@@ -63,6 +61,7 @@ public class SteamLobbyManager : MonoBehaviour
         SteamMatchmaking.OnLobbyEntered -= HandleLobbyEntered;
         SteamMatchmaking.OnLobbyMemberJoined -= HandleMemberJoined;
         SteamMatchmaking.OnLobbyMemberLeave -= HandleMemberLeft;
+        SteamMatchmaking.OnLobbyDataChanged -= HandleLobbyDataChanged;
     }
 
     private void HandleLobbyDataChanged(Lobby lobby)
@@ -112,7 +111,7 @@ public class SteamLobbyManager : MonoBehaviour
         Debug.Log("Requesting lobby list...");
 
         var lobbies = await SteamMatchmaking.LobbyList
-            .WithMaxResults(20)
+            .WithMaxResults(40)
             .RequestAsync();
 
         var list = new List<Lobby>(lobbies);
@@ -199,4 +198,41 @@ public class SteamLobbyManager : MonoBehaviour
     {
         return SteamClient.Name;
     }
+
+    public async Task<PlayerData> GetPlayerData(ulong steamId)
+    {
+        PlayerData data = new PlayerData();
+        data.SteamId = steamId;
+
+        // ===== NAME =====
+        var friend = new Friend(steamId);
+        data.Name = friend.Name;
+
+        // ===== AVATAR =====
+        var avatar = await SteamFriends.GetLargeAvatarAsync(steamId);
+
+        if (avatar.HasValue)
+        {
+            var img = avatar.Value;
+
+            Texture2D tex = new Texture2D((int)img.Width, (int)img.Height, TextureFormat.RGBA32, false);
+            tex.LoadRawTextureData(img.Data);
+            tex.Apply();
+
+            data.Avatar = Sprite.Create(
+                tex,
+                new Rect(0, 0, tex.width, tex.height),
+                new Vector2(0.5f, 0.5f)
+            );
+        }
+
+        return data;
+    }
+}
+
+public class PlayerData
+{
+    public ulong SteamId;
+    public string Name;
+    public Sprite Avatar;
 }

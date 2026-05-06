@@ -1,4 +1,4 @@
-using TMPro;
+﻿using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -7,9 +7,28 @@ public class PlayerInfoSingleUI : MonoBehaviour
     [SerializeField] private Image playerAvatar;
     [SerializeField] private TextMeshProUGUI playerNameTxt;
 
+    private ulong currentSteamId;
+
     public void UpdatePlayerInfo(string playerName)
     {
         playerNameTxt.text = playerName;
+    }
+
+    public async void UpdatePlayerInfo(ulong steamId)
+    {
+        currentSteamId = steamId;
+
+        var data = await SteamLobbyManager.Instance.GetPlayerData(steamId);
+
+        // chống race condition
+        if (currentSteamId != steamId) return;
+
+        playerNameTxt.text = data.Name;
+
+        if (data.Avatar != null)
+        {
+            playerAvatar.sprite = data.Avatar;
+        }
     }
 
 

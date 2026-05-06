@@ -27,6 +27,11 @@ public class LobbySingleUI : MonoBehaviour
         });
     }
 
+    private void OnDestroy()
+    {
+        joinBtn.onClick.RemoveAllListeners();
+    }
+
     public void UpdateLobby(Lobby lobby)
     {
         this.lobby = lobby;
@@ -39,7 +44,7 @@ public class LobbySingleUI : MonoBehaviour
         }
         nameText.text = name;
 
-        // ===== MODE (nếu bạn có set) =====
+        // ===== MODE =====
         string mode = lobby.GetData("mode");
         gameModeText.text = string.IsNullOrEmpty(mode) ? "Default" : mode;
 

@@ -4,24 +4,31 @@ public class LoadingUI : MonoBehaviour
 {
     private void Start()
     {
-        LobbyManager.Instance.OnLobbyTaskStarted += LobbyManager_OnLobbyTaskStarted;
-        LobbyManager.Instance.OnLobbyTaskCompleted += LobbyManager_OnLobbyTaskCompleted;
-        LobbyManager.Instance.OnLobbyError += LobbyManager_OnLobbyError;
+        SteamLobbyManager.Instance.OnLobbyTaskStarted += LobbyManager_OnLobbyTaskStarted;
+        SteamLobbyManager.Instance.OnLobbyTaskCompleted += LobbyManager_OnLobbyTaskCompleted;
+        SteamLobbyManager.Instance.OnLobbyError += LobbyManager_OnLobbyError;
 
         Hide();
     }
 
-    private void LobbyManager_OnLobbyError(object sender, System.EventArgs e)
+    private void OnDestroy()
+    {
+        SteamLobbyManager.Instance.OnLobbyTaskStarted -= LobbyManager_OnLobbyTaskStarted;
+        SteamLobbyManager.Instance.OnLobbyTaskCompleted -= LobbyManager_OnLobbyTaskCompleted;
+        SteamLobbyManager.Instance.OnLobbyError -= LobbyManager_OnLobbyError;
+    }
+
+    private void LobbyManager_OnLobbyError()
     {
         Hide();
     }
 
-    private void LobbyManager_OnLobbyTaskCompleted(object sender, System.EventArgs e)
+    private void LobbyManager_OnLobbyTaskCompleted()
     {
         Hide();
     }
 
-    private void LobbyManager_OnLobbyTaskStarted(object sender, System.EventArgs e)
+    private void LobbyManager_OnLobbyTaskStarted()
     {
         Show();
     }
