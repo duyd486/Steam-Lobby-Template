@@ -9,6 +9,8 @@ public class SteamLobbyManager : MonoBehaviour
 {
     public static SteamLobbyManager Instance;
 
+    [SerializeField] private NotificationEventChannelSO notificationEventChannel;
+
     public Lobby? CurrentLobby;
     public bool IsInitialized { get; private set; }
 
@@ -23,6 +25,9 @@ public class SteamLobbyManager : MonoBehaviour
     public Action OnLobbyTaskStarted;
     public Action OnLobbyTaskCompleted;
     public Action OnLobbyError;
+
+    private const string HOST_ADDRESS_KEY = "HostAddress";
+    private const string HOST_LOCAL_ADDRESS_KEY = "HostLocalAddress";
 
     private void Awake()
     {
@@ -93,10 +98,13 @@ public class SteamLobbyManager : MonoBehaviour
         lobby.Value.SetPublic();
         lobby.Value.SetData("name", SteamClient.Name + "'s Room");
 
-        // QUAN TRỌNG: lưu host
-        lobby.Value.SetData("HostAddress", SteamClient.SteamId.ToString());
+        // lưu host
+        lobby.Value.SetData(HOST_ADDRESS_KEY, SteamClient.SteamId.ToString());
+        lobby.Value.SetData(HOST_LOCAL_ADDRESS_KEY, TransportManager.Instance.GetLocalIPAddress());
 
         Debug.Log("Lobby created: " + lobby.Value.Id);
+
+        TransportManager.Instance.StartHost();
 
         OnLobbyCreated?.Invoke(lobby.Value);
 
@@ -130,6 +138,8 @@ public class SteamLobbyManager : MonoBehaviour
 
         await SteamMatchmaking.JoinLobbyAsync(lobbyId);
 
+        TransportManager.Instance.StartClient(GetHostLocalAddress());
+
         OnLobbyTaskCompleted?.Invoke();
     }
 
@@ -156,6 +166,8 @@ public class SteamLobbyManager : MonoBehaviour
 
             OnLobbyLeft?.Invoke();
         }
+
+        TransportManager.Instance.Shutdown();
 
         OnLobbyTaskCompleted?.Invoke();
     }
@@ -197,6 +209,14 @@ public class SteamLobbyManager : MonoBehaviour
     public string GetPlayerName()
     {
         return SteamClient.Name;
+    }
+
+    public string GetHostLocalAddress()
+    {
+        if (!CurrentLobby.HasValue)
+            return string.Empty;
+
+        return CurrentLobby.Value.GetData(HOST_LOCAL_ADDRESS_KEY);
     }
 
     public async Task<PlayerData> GetPlayerData(ulong steamId)

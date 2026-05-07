@@ -38,7 +38,7 @@ public class LobbyUI : MonoBehaviour
             // Start game bằng NGO
             if (NetworkManager.Singleton.IsHost)
             {
-                NetworkManager.Singleton.StartHost();
+                //NetworkManager.Singleton.StartHost();
             }
         });
 
