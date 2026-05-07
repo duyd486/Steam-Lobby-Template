@@ -119,7 +119,7 @@ public class SteamLobbyManager : MonoBehaviour
         Debug.Log("Requesting lobby list...");
 
         var lobbies = await SteamMatchmaking.LobbyList
-            .WithMaxResults(40)
+            .WithMaxResults(100)
             .RequestAsync();
 
         var list = new List<Lobby>(lobbies);
@@ -136,7 +136,7 @@ public class SteamLobbyManager : MonoBehaviour
     {
         OnLobbyTaskStarted?.Invoke();
 
-        await SteamMatchmaking.JoinLobbyAsync(lobbyId);
+        CurrentLobby = await SteamMatchmaking.JoinLobbyAsync(lobbyId);
 
         TransportManager.Instance.StartClient(GetHostLocalAddress());
 
