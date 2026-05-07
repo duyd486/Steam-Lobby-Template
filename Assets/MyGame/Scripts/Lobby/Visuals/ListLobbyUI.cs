@@ -47,7 +47,6 @@ public class ListLobbyUI : MonoBehaviour
     private void MenuUI_OnListLobbyClick(object sender, System.EventArgs e)
     {
         Show();
-        _ = SteamLobbyManager.Instance.ListLobbies();
     }
 
     public void UpdateListLobby(List<Lobby> lobbies)

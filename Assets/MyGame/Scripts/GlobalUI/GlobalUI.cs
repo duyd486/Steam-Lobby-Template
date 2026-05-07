@@ -2,9 +2,11 @@ using UnityEngine;
 
 public class GlobalUI : MonoBehaviour
 {
-    [SerializeField] private NotificationEventChannelSO notificationEventChannel;
-
     public static GlobalUI Instance { get; private set; }
+
+    [SerializeField] private NotificationEventChannelSO notificationEventChannel;
+    [SerializeField] private GameObject notificationContainer;
+    [SerializeField] private NotificationSingleUI notificationSingleUI;
 
     private void Awake()
     {
@@ -27,5 +29,7 @@ public class GlobalUI : MonoBehaviour
     private void NotificationEventChannel_OnEventRaised(NotificationData data)
     {
         Debug.Log($"GlobalUI received notification: {data.Message}");
+        NotificationSingleUI notificationSingleUITmp = Instantiate(notificationSingleUI, notificationContainer.transform);
+        notificationSingleUITmp.SetNotification(data.Message, data.IsError);
     }
 }

@@ -10,6 +10,7 @@ public class SteamLobbyManager : MonoBehaviour
     public static SteamLobbyManager Instance;
 
     [SerializeField] private NotificationEventChannelSO notificationEventChannel;
+    [SerializeField] private int lobbyCountOnSearch = 100;
 
     public Lobby? CurrentLobby;
     public bool IsInitialized { get; private set; }
@@ -34,14 +35,22 @@ public class SteamLobbyManager : MonoBehaviour
         try
         {
             SteamClient.Init(480);
-            Debug.Log("Steam OK: " + SteamClient.Name);
+            notificationEventChannel.Raise(new NotificationData
+            {
+                Message = "Steam initialized: " + SteamClient.Name,
+                IsError = false
+            });
             IsInitialized = true;
             OnSteamInitDone?.Invoke();
         }
         catch (System.Exception e)
         {
             IsInitialized = false;
-            Debug.LogError("Steam fail: " + e.Message);
+            notificationEventChannel.Raise(new NotificationData
+            {
+                Message = "Steam fail: " + e.Message,
+                IsError = true
+            });
         }
 
         if (Instance == null) Instance = this;
@@ -71,7 +80,11 @@ public class SteamLobbyManager : MonoBehaviour
 
     private void HandleLobbyDataChanged(Lobby lobby)
     {
-        Debug.Log("Lobby data changed: " + lobby.Id);
+        //notificationEventChannel.Raise(new NotificationData
+        //{
+        //    Message = "Lobby data changed: " + lobby.Id,
+        //    IsError = false
+        //});
 
         if (!CurrentLobby.HasValue || lobby.Id != CurrentLobby.Value.Id) return;
 
@@ -89,7 +102,11 @@ public class SteamLobbyManager : MonoBehaviour
 
         if (!lobby.HasValue)
         {
-            Debug.LogError("Create lobby failed");
+            notificationEventChannel.Raise(new NotificationData
+            {
+                Message = "Failed to create lobby",
+                IsError = true
+            });
             return;
         }
 
@@ -102,7 +119,11 @@ public class SteamLobbyManager : MonoBehaviour
         lobby.Value.SetData(HOST_ADDRESS_KEY, SteamClient.SteamId.ToString());
         lobby.Value.SetData(HOST_LOCAL_ADDRESS_KEY, TransportManager.Instance.GetLocalIPAddress());
 
-        Debug.Log("Lobby created: " + lobby.Value.Id);
+        notificationEventChannel.Raise(new NotificationData
+        {
+            Message = "Lobby created: " + lobby.Value.Id,
+            IsError = false
+        });
 
         TransportManager.Instance.StartHost();
 
@@ -116,15 +137,23 @@ public class SteamLobbyManager : MonoBehaviour
     {
         OnLobbyTaskStarted?.Invoke();
 
-        Debug.Log("Requesting lobby list...");
+        notificationEventChannel.Raise(new NotificationData
+        {
+            Message = "Requesting lobby list...",
+            IsError = false
+        });
 
         var lobbies = await SteamMatchmaking.LobbyList
-            .WithMaxResults(100)
+            .WithMaxResults(lobbyCountOnSearch)
             .RequestAsync();
 
         var list = new List<Lobby>(lobbies);
 
-        Debug.Log("Found " + list.Count + " lobbies");
+        notificationEventChannel.Raise(new NotificationData
+        {
+            Message = "Found " + list.Count + " lobbies",
+            IsError = false
+        });
 
         OnLobbyListUpdated?.Invoke(list);
 
@@ -147,7 +176,11 @@ public class SteamLobbyManager : MonoBehaviour
     {
         CurrentLobby = lobby;
 
-        Debug.Log("Joined lobby: " + lobby.Id);
+        notificationEventChannel.Raise(new NotificationData
+        {
+            Message = "Joined lobby: " + lobby.Id,
+            IsError = false
+        });
 
         OnLobbyJoined?.Invoke(lobby);
     }
@@ -162,7 +195,11 @@ public class SteamLobbyManager : MonoBehaviour
             CurrentLobby.Value.Leave();
             CurrentLobby = null;
 
-            Debug.Log("Left lobby");
+            notificationEventChannel.Raise(new NotificationData
+            {
+                Message = "Leave Lobby",
+                IsError = false
+            });
 
             OnLobbyLeft?.Invoke();
         }
@@ -175,7 +212,11 @@ public class SteamLobbyManager : MonoBehaviour
     // ================= MEMBER EVENTS =================
     private void HandleMemberJoined(Lobby lobby, Friend friend)
     {
-        Debug.Log($"Member joined: {friend.Name} ({friend.Id})");
+        notificationEventChannel.Raise(new NotificationData
+        {
+            Message = $"Member joined: {friend.Name} ({friend.Id})",
+            IsError = false
+        });
 
         if (!CurrentLobby.HasValue || lobby.Id != CurrentLobby.Value.Id) return;
 
@@ -186,7 +227,11 @@ public class SteamLobbyManager : MonoBehaviour
 
     private void HandleMemberLeft(Lobby lobby, Friend friend)
     {
-        Debug.Log($"Member left: {friend.Name} ({friend.Id})");
+        notificationEventChannel.Raise(new NotificationData
+        {
+            Message = $"Member left: {friend.Name} ({friend.Id})",
+            IsError = false
+        });
 
         if (!CurrentLobby.HasValue || lobby.Id != CurrentLobby.Value.Id) return;
 
@@ -200,7 +245,7 @@ public class SteamLobbyManager : MonoBehaviour
     {
         if (!CurrentLobby.HasValue) return 0;
 
-        string hostId = CurrentLobby.Value.GetData("HostAddress");
+        string hostId = CurrentLobby.Value.GetData(HOST_ADDRESS_KEY);
 
         return ulong.Parse(hostId);
     }
