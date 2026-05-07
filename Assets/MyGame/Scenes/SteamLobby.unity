@@ -5972,6 +5972,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 594f81b69187c2c4ca81d7f70e9ff1ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::TransportManager
+  notificationEventChannelSO: {fileID: 11400000, guid: 09b05ec8450398d40adfa99d798e21eb, type: 2}
   defaultPort: 7777
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

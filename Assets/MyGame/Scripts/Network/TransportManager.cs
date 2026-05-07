@@ -11,6 +11,7 @@ public class TransportManager : MonoBehaviour
     public static TransportManager Instance { get; private set; }
 
     [Header("Config")]
+    [SerializeField] private NotificationEventChannelSO notificationEventChannelSO;
     [SerializeField] private ushort defaultPort = 7777;
 
     public bool IsOnline =>
@@ -43,7 +44,11 @@ public class TransportManager : MonoBehaviour
     {
         if (networkManager.IsListening)
         {
-            Debug.LogWarning("Network already running");
+            notificationEventChannelSO.Raise(new NotificationData
+            {
+                Message = "Network already running",
+                IsError = true
+            });
             return false;
         }
 
@@ -54,9 +59,11 @@ public class TransportManager : MonoBehaviour
 
         bool success = networkManager.StartHost();
 
-        Debug.Log(success
-            ? "Host started"
-            : "Failed to start host");
+        notificationEventChannelSO.Raise(new NotificationData
+        {
+            Message = success ? "Host started" : "Failed to start host",
+            IsError = !success
+        });
 
         return success;
     }
@@ -65,24 +72,52 @@ public class TransportManager : MonoBehaviour
 
     public bool StartClient(string ipAddress)
     {
-        if (networkManager.IsListening)
+        try
         {
-            Debug.LogWarning("Network already running");
+            if (string.IsNullOrWhiteSpace(ipAddress))
+            {
+                notificationEventChannelSO.Raise(new NotificationData
+                {
+                    Message = "FFailed to start client! Maybe you are in lobby of another game!",
+                    IsError = true
+                });
+                return false;
+            }
+
+            if (networkManager.IsListening)
+            {
+                notificationEventChannelSO.Raise(new NotificationData
+                {
+                    Message = "Network already running",
+                    IsError = true
+                });
+                return false;
+            }
+
+            unityTransport.SetConnectionData(
+                ipAddress,
+                defaultPort
+            );
+
+            bool success = networkManager.StartClient();
+
+            notificationEventChannelSO.Raise(new NotificationData
+            {
+                Message = "Client started at: " + ipAddress,
+                IsError = false
+            });
+
+            return success;
+        }
+        catch
+        {
+            notificationEventChannelSO.Raise(new NotificationData
+            {
+                Message = "FFailed to start client! Maybe you are in lobby of another game!",
+                IsError = true
+            });
             return false;
         }
-
-        unityTransport.SetConnectionData(
-            ipAddress,
-            defaultPort
-        );
-
-        bool success = networkManager.StartClient();
-
-        Debug.Log(success
-            ? "Client started"
-            : "Failed to start client");
-
-        return success;
     }
 
     // ================= SHUTDOWN =================
