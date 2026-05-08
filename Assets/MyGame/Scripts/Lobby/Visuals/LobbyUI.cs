@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using TMPro;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class LobbyUI : MonoBehaviour
@@ -39,6 +40,10 @@ public class LobbyUI : MonoBehaviour
             if (NetworkManager.Singleton.IsHost)
             {
                 //NetworkManager.Singleton.StartHost();
+                NetworkManager.Singleton.SceneManager.LoadScene(
+                    "Game",
+                    LoadSceneMode.Single
+                );
             }
         });
 
