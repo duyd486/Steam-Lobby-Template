@@ -32,6 +32,9 @@ public class SteamLobbyManager : MonoBehaviour
 
     private void Awake()
     {
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
+
         try
         {
             SteamClient.Init(480);
@@ -52,9 +55,6 @@ public class SteamLobbyManager : MonoBehaviour
                 IsError = true
             });
         }
-
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
     }
 
     private void Start()
@@ -76,6 +76,11 @@ public class SteamLobbyManager : MonoBehaviour
         SteamMatchmaking.OnLobbyMemberJoined -= HandleMemberJoined;
         SteamMatchmaking.OnLobbyMemberLeave -= HandleMemberLeft;
         SteamMatchmaking.OnLobbyDataChanged -= HandleLobbyDataChanged;
+
+        if (Instance == this && IsInitialized)
+        {
+            SteamClient.Shutdown();
+        }
     }
 
     private void HandleLobbyDataChanged(Lobby lobby)
@@ -107,6 +112,7 @@ public class SteamLobbyManager : MonoBehaviour
                 Message = "Failed to create lobby",
                 IsError = true
             });
+            OnLobbyError?.Invoke();
             return;
         }
 

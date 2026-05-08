@@ -1,46 +1,52 @@
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerSpawner : MonoBehaviour
 {
     [SerializeField] private GameObject playerPrefab;
     [SerializeField] private List<GameObject> activePlayers;
 
-    //private void Awake()
-    //{
-    //    NetworkManager.Singleton.SceneManager.OnLoadEventCompleted += OnLoadCompleted;
-    //}
+    private void Awake()
+    {
+        NetworkManager.Singleton.SceneManager.OnLoadEventCompleted += OnLoadCompleted;
+    }
 
-    //private void OnDestroy()
-    //{
-    //    NetworkManager.Singleton.SceneManager.OnLoadEventCompleted -= OnLoadCompleted;
-    //}
+    private void OnDestroy()
+    {
+        if (NetworkManager.Singleton != null &&
+            NetworkManager.Singleton.SceneManager != null)
+        {
+            NetworkManager.Singleton.SceneManager.OnLoadEventCompleted -= OnLoadCompleted;
+        }
+    }
 
-    //private void OnLoadCompleted(
-    //    string sceneName,
-    //    LoadSceneMode mode,
-    //    List<ulong> clientsCompleted,
-    //    List<ulong> clientsTimedOut)
-    //{
-    //    if (!NetworkManager.Singleton.IsServer)
-    //        return;
-
-    //    foreach (ulong clientId in clientsCompleted)
-    //    {
-    //        SpawnPlayerForClient(clientId);
-    //    }
-    //}
-
-    private void Update()
+    private void OnLoadCompleted(
+        string sceneName,
+        LoadSceneMode mode,
+        List<ulong> clientsCompleted,
+        List<ulong> clientsTimedOut)
     {
         if (!NetworkManager.Singleton.IsServer)
             return;
-        if (Input.GetKeyDown(KeyCode.Space))
+
+        foreach (ulong clientId in clientsCompleted)
         {
-            SpawnPlayers();
+            SpawnPlayerForClient(clientId);
         }
     }
+
+    // Only for testing purposes, to spawn players without loading steam lobby scene
+    //private void Update()
+    //{
+    //    if (!NetworkManager.Singleton.IsServer)
+    //        return;
+    //    if (Input.GetKeyDown(KeyCode.Space))
+    //    {
+    //        SpawnPlayers();
+    //    }
+    //}
 
     private void SpawnPlayers()
     {

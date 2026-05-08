@@ -36,7 +36,7 @@ public class MenuUI : MonoBehaviour
     {
         createLobbyBtn.onClick.RemoveAllListeners();
         listLobbyBtn.onClick.RemoveAllListeners();
-        if (SteamLobbyManager.Instance.IsInitialized)
+        if (SteamLobbyManager.Instance != null)
         {
             SteamLobbyManager.Instance.OnSteamInitDone -= SetPlayerName;
         }
@@ -49,7 +49,6 @@ public class MenuUI : MonoBehaviour
 
     private void SetPlayerName()
     {
-        Debug.Log("Player: " + SteamLobbyManager.Instance.GetPlayerName());
         playerNameTxt.text = "Player: " + SteamLobbyManager.Instance.GetPlayerName();
     }
 }

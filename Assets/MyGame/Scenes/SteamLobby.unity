@@ -5198,6 +5198,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1878508644}
   - component: {fileID: 1878508643}
+  - component: {fileID: 1878508645}
   m_Layer: 0
   m_Name: SteamLobbyManager
   m_TagString: Untagged
@@ -5234,6 +5235,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1878508645
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1878508642}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3e899deb8f66651408a4d378910a8cb2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SteamLobbyProtect
 --- !u!1 &1997257702
 GameObject:
   m_ObjectHideFlags: 0
@@ -5865,6 +5878,7 @@ GameObject:
   - component: {fileID: 2142978475}
   - component: {fileID: 2142978474}
   - component: {fileID: 2142978477}
+  - component: {fileID: 2142978478}
   m_Layer: 0
   m_Name: NetworkManager
   m_TagString: Untagged
@@ -5974,6 +5988,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TransportManager
   notificationEventChannelSO: {fileID: 11400000, guid: 09b05ec8450398d40adfa99d798e21eb, type: 2}
   defaultPort: 7777
+--- !u!114 &2142978478
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2142978473}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75593f48ef1bc25439a56b820ba444f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NetworkProtect
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
